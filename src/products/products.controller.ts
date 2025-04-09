@@ -1,4 +1,4 @@
-import { Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 
 
 @Controller('products')
@@ -18,7 +18,7 @@ export class ProductsController {
     return 'Retorna un producto por id'
   }
   @Patch()
-  updateProduct(@Param('id') id:string){
+  updateProduct(@Param('id') id:string, @Body() body: any){
     return 'Actualiza un producto'
   }
   @Delete(':id')
