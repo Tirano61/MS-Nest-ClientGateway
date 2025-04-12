@@ -1,8 +1,10 @@
-import { BadRequestException, Body, Controller, Delete, Get, Inject, Param, Patch, Post, Query } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
+import { BadRequestException, Body, Controller, Delete, Get, Inject, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { PRODUCT_SERVICE } from 'src/config/services';
 import { PaginationDto } from '../common/dto/pagination.dto';
-import { firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom } from 'rxjs';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
 
 
 @Controller('products')
@@ -12,9 +14,10 @@ export class ProductsController {
   ) {}
 
   @Post()
-  createProduct(){
-    return 'Crea un productos'
+  createProduct(@Body() createProductDto: CreateProductDto){
+    return this.productClient.send({ cmd: 'create_product' }, createProductDto);
   }
+  
   @Get()
   findAllProducts(@Query()  paginationDto: PaginationDto){
     return this.productClient.send({ cmd: 'find_all_product' },  paginationDto);
@@ -29,17 +32,26 @@ export class ProductsController {
       return product;
       
     } catch (error) {
-      throw new BadRequestException(error);
+      throw new RpcException(error);
     }
-     
+  }
 
+  @Patch(':id')
+  updateProduct(@Param('id', ParseIntPipe) id:number, @Body() updateProductDto: UpdateProductDto){
+    return this.productClient.send({ cmd: 'update_product' },  {
+      id,
+      ...updateProductDto
+    }).pipe(
+      catchError( err => { throw new RpcException(err) } )
+    );
   }
-  @Patch()
-  updateProduct(@Param('id') id:string, @Body() body: any){
-    return 'Actualiza un producto'
-  }
+
   @Delete(':id')
   deleteProduct(@Param('id') id:string){
-    return 'Borra un producto'
+    return this.productClient.send({ cmd: 'delete_product' }, {id}).pipe(
+      catchError((err) => {
+        throw new RpcException(err);
+      })
+    );
   }
 }
