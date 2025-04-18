@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Inject, ParseUUIDPipe, HttpException, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Inject, ParseUUIDPipe, HttpException, Query, Patch } from '@nestjs/common';
 
 import { CreateOrderDto } from './dto/create-order.dto';
 import { ORDER_SERVICE } from 'src/config/services';
@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { OrderPaginationDto } from './dto/order-pagination.dto';
 import { PaginationDto } from 'src/common';
 import { StatusDto } from './dto/status.dto';
+
 
 @Controller('orders')
 export class OrdersController {
@@ -53,6 +54,34 @@ export class OrdersController {
       const errorMessage = err?.message || 'An unexpected error occurred';
       const errorCode = err?.status || 'UNKNOWN_ERROR';
       throw new HttpException(errorMessage, errorCode );
+    }
+  }
+
+  @Patch(':id')
+  async changeStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() statusDto: StatusDto,
+  ) {
+    try {
+      const result = await firstValueFrom(
+        this.orderClient.send('changeOrderStatus', { id: id, status: statusDto.status }),
+      );
+  
+      if (!result) {
+        throw new HttpException(
+          `Failed to change status for order with id ${id}`,
+          404,
+        );
+      }
+  
+      return result;
+    } catch (error) {
+      const errorResponse = error?.response || {};
+      const errorMessage = errorResponse?.message || 'An unexpected error occurred';
+      const errorCode = errorResponse?.status || 500;
+  
+      // Lanza una excepción HTTP para que el cliente reciba el error correctamente
+      throw new HttpException(errorMessage, errorCode);
     }
   }
 
