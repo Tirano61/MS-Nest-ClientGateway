@@ -11,23 +11,23 @@ import { StatusDto } from './dto/status.dto';
 
 @Controller('orders')
 export class OrdersController {
-  constructor(@Inject(NATS_SERVICE) private readonly orderClient: ClientProxy ) {}
+  constructor(@Inject(NATS_SERVICE) private readonly client: ClientProxy ) {}
 
   @Post()
   create(@Body() createOrderDto: CreateOrderDto) {
-    return this.orderClient.send( 'createOrder' , createOrderDto);
+    return this.client.send( 'createOrder' , createOrderDto);
   }
 
   @Get()
   findAll(@Query() orderPaginationDto: OrderPaginationDto) {
-    return this.orderClient.send('findAllOrders', orderPaginationDto);
+    return this.client.send('findAllOrders', orderPaginationDto);
   }
 
   @Get('id/:id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     try {
       const order = await firstValueFrom(
-        this.orderClient.send('findOneOrder', {id})
+        this.client.send('findOneOrder', {id})
       );
       return order;
     } catch (err) {
@@ -43,7 +43,7 @@ export class OrdersController {
 
     try {
       
-      return this.orderClient.send('findAllOrders', {
+      return this.client.send('findAllOrders', {
         ...paginationDto,
         status: statusDto.status,
       });
@@ -64,7 +64,7 @@ export class OrdersController {
   ) {
     try {
       const result = await firstValueFrom(
-        this.orderClient.send('changeOrderStatus', { id: id, status: statusDto.status }),
+        this.client.send('changeOrderStatus', { id: id, status: statusDto.status }),
       );
   
       if (!result) {
