@@ -48,7 +48,6 @@ export class OrdersController {
         status: statusDto.status,
       });
     
-       
     } catch (err) {
       const errorResponse = err?.response || {};
       const errorMessage = err?.message || 'An unexpected error occurred';
