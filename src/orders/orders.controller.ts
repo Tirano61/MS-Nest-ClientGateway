@@ -19,8 +19,16 @@ export class OrdersController {
   }
 
   @Get()
-  findAll(@Query() orderPaginationDto: OrderPaginationDto) {
-    return this.client.send('findAllOrders', orderPaginationDto);
+  async findAll(@Query() orderPaginationDto: OrderPaginationDto) {
+    try {
+      const orders = await firstValueFrom(
+        this.client.send('findAllOrders', orderPaginationDto)
+      )
+      return orders;
+      
+    } catch (error) {
+      throw new RpcException(error)
+    }
   }
 
   @Get('id/:id')
@@ -30,11 +38,8 @@ export class OrdersController {
         this.client.send('findOneOrder', {id})
       );
       return order;
-    } catch (err) {
-      const errorResponse = err?.response || {};
-      const errorMessage = err?.message || 'An unexpected error occurred';
-      const errorCode = err?.status || 'UNKNOWN_ERROR';
-      throw new HttpException(errorMessage, errorCode );
+    } catch (error) {
+      throw new RpcException(error);
     }
   }
 
@@ -48,11 +53,8 @@ export class OrdersController {
         status: statusDto.status,
       });
     
-    } catch (err) {
-      const errorResponse = err?.response || {};
-      const errorMessage = err?.message || 'An unexpected error occurred';
-      const errorCode = err?.status || 'UNKNOWN_ERROR';
-      throw new HttpException(errorMessage, errorCode );
+    } catch (error) {
+      throw new RpcException(error);
     }
   }
 
@@ -74,13 +76,9 @@ export class OrdersController {
       }
   
       return result;
+
     } catch (error) {
-      const errorResponse = error?.response || {};
-      const errorMessage = errorResponse?.message || 'An unexpected error occurred';
-      const errorCode = errorResponse?.status || 500;
-  
-      // Lanza una excepción HTTP para que el cliente reciba el error correctamente
-      throw new HttpException(errorMessage, errorCode);
+      throw new RpcException(error);
     }
   }
 
